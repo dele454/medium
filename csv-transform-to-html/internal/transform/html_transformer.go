@@ -39,7 +39,7 @@ func (tr *HTMLTransformer) ProcessRecord(wg *sync.WaitGroup, record <-chan []str
 		tr.reporter.AddDuration(time.Since(now).Seconds())
 		tr.reporter.Completed()
 
-		err := tr.reporter.WriteReportToFile(ctx)
+		err := tr.reporter.WriteReportToStdOut(ctx)
 		if err != nil {
 			utils.Log(utils.ColorError, err)
 		}

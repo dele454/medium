@@ -27,11 +27,6 @@ func NewMockReporter(s bool) *Mock {
 	}
 }
 
-// WriteReportToFile writes report to file
-func (t *Mock) WriteReportToFile(ctx context.Context) error {
-	return nil
-}
-
 // WriteReportToStdOut writes report to stdout
 func (t *Mock) WriteReportToStdOut(ctx context.Context) error {
 	return nil

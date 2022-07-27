@@ -9,7 +9,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/dele454/medium/csv-transform-to-html/internal/errs"
 	"github.com/dele454/medium/csv-transform-to-html/internal/utils"
 )
 
@@ -22,7 +21,6 @@ type Reporter interface {
 	Completed()
 	AddDuration(since float64)
 
-	WriteReportToFile(ctx context.Context) error
 	WriteReportToStdOut(ctx context.Context) error
 
 	SetFilename(name string)
@@ -40,7 +38,6 @@ type Reporter interface {
 type TransformationReporter struct {
 	FileName                string
 	Headers                 []string
-	SendReportToFile        bool
 	TotalProcessedRecords   int
 	TotalTransformedRecords int
 	TotalFailedRecords      int
@@ -53,66 +50,6 @@ type TransformationReporter struct {
 // NewTransformationReporter create a new instance of a report
 func NewTransformationReporter() *TransformationReporter {
 	return &TransformationReporter{}
-}
-
-// WriteReportToFile writes report to file
-func (t *TransformationReporter) WriteReportToFile(ctx context.Context) error {
-	var err error
-
-	if !t.SendReportToFile {
-		return t.WriteReportToStdOut(ctx)
-	}
-
-	if t.FileName == "" {
-		return errs.ErrorNoSourceFileName
-	}
-
-	path := utils.RootDir()
-
-	// create template
-	tmpl, err := template.Must(template.New("TEXT"), err).ParseFiles(path + "/internal/transform/template/report.tmpl")
-	if err != nil {
-		return err
-	}
-
-	// apply tmpl to data
-	var processed bytes.Buffer
-	err = tmpl.ExecuteTemplate(&processed, "report.tmpl", t)
-	if err != nil {
-		return err
-	}
-
-	// create report folder if not exists
-	folder := path + "/report"
-
-	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		err := os.Mkdir(folder, os.ModePerm)
-		if err != nil {
-			return fmt.Errorf(errs.ErrorFailedToCreateDirectory.Error(), err)
-		}
-	}
-
-	// create output txt file
-	f, err := os.Create(fmt.Sprintf("%s/%s_%s.txt", folder, t.FileName, t.CompletedAt))
-	if err != nil {
-		utils.Log(utils.ColorError, err)
-		return err
-	}
-
-	// write output to txt file
-	w := bufio.NewWriter(f)
-	_, err = w.WriteString(processed.String())
-	if err != nil {
-		return err
-	}
-
-	// flush buffer
-	err = w.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // WriteReportToStdOut writes report to stdout
