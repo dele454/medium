@@ -1,0 +1,18 @@
+++++++++++++++++++++++++++++++++++
+Workbook1.csv Transformation Report
+++++++++++++++++++++++++++++++++++
+
+FileName: Workbook.csv
+Total Processed Records: 1000
+Total Failed Records: 1
+Total Transformed Records: 999
+Duration: 1.8882s
+Completed At: 2022-07-11 11:59:01
+
+-------
+Errors:
+-------
+- Expected headers don't match file's headers.
+- Expected headers don't match file's headers.
+- Expected headers don't match file's headers.
+

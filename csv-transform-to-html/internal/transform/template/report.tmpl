@@ -1,0 +1,20 @@
+
+************************************
+Transformation Report: {{.FileName}}
+************************************
+
+File Name: {{.FileName}}
+Total Processed Records: {{.TotalProcessedRecords}}
+Total Failed Records: {{.TotalFailedRecords}}
+Total Transformed Records: {{.TotalTransformedRecords}}
+Duration: {{.DurationDisplay}}
+Completed At: {{.CompletedAt}}
+
+-------
+Errors:
+-------
+{{range $err := .Errors}}
+- {{$err}}
+{{else}}
+No Errors
+{{end}}
