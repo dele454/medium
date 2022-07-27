@@ -5,10 +5,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"sync"
-	"text/template"
 	"time"
 
 	"github.com/dele454/medium/csv-transform-to-html/internal/errs"
@@ -43,9 +43,6 @@ func (tr *HTMLTransformer) ProcessRecord(wg *sync.WaitGroup, record <-chan []str
 		if err != nil {
 			utils.Log(utils.ColorError, err)
 		}
-
-		utils.Log(utils.ColorOK, fmt.Sprintf("Done transforming and exporting %s entries.",
-			filepath.Ext(tr.reporter.GetFilename())))
 
 		wg.Done()
 	}()
@@ -99,6 +96,7 @@ func (tr *HTMLTransformer) WriteOutputToFile(output *Output) error {
 	// create template
 	tmpl, err := template.Must(template.New("HTML"), err).ParseFiles(path + "/internal/transform/template/output.tmpl")
 	if err != nil {
+		tr.reporter.AddError(err)
 		return err
 	}
 

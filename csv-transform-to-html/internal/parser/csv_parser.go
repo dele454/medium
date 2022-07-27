@@ -23,8 +23,7 @@ type Parser interface {
 
 // CSVParser parser for parsing and reading from csv files
 type CSVParser struct {
-	// file   CSVFile
-	report report.Reporter
+	reporter report.Reporter
 }
 
 // CSVFile
@@ -38,7 +37,7 @@ func NewCSVParser(file string, reporter report.Reporter) *CSVParser {
 	reporter.SetFilename(file)
 
 	return &CSVParser{
-		report: reporter,
+		reporter: reporter,
 	}
 }
 
@@ -49,15 +48,14 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 	defer func() {
 		close(done)
 		close(record)
-		c.report.AddDuration(time.Since(start).Seconds())
-
-		utils.Log(utils.ColorOK, "Done reading & parsing csv file.")
+		c.reporter.AddDuration(time.Since(start).Seconds())
 
 		wg.Done()
 	}()
 
-	f, err := os.Open(c.report.GetFilename())
+	f, err := os.Open(c.reporter.GetFilename())
 	if err != nil {
+		c.reporter.AddError(err)
 		utils.Log(utils.ColorError, fmt.Sprintf("Error opening csv file: %s", err))
 		return
 	}
@@ -69,27 +67,28 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 	// read the headers
 	headers, err := reader.Read()
 	if err != nil {
+		c.reporter.AddError(err)
 		utils.Log(utils.ColorError, errs.ErrorNoHeadersFound)
 		return
 	}
 
 	// set the headers
-	c.report.SetHeaders(headers)
-	c.report.SetFilename(filepath.Base(c.report.GetFilename()))
+	c.reporter.SetHeaders(headers)
+	c.reporter.SetFilename(filepath.Base(c.reporter.GetFilename()))
 
 	// read from file
 	for {
 		row, err := reader.Read()
 		if err != nil {
 			if err != io.EOF {
-				c.report.AddError(err)
-				c.report.RecordFailed()
+				c.reporter.AddError(err)
+				c.reporter.RecordFailed()
 				continue
 			}
 			break
 		}
 
-		c.report.RecordProcessed()
+		c.reporter.RecordProcessed()
 		record <- row
 	}
 
