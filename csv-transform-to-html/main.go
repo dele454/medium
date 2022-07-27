@@ -10,17 +10,13 @@ import (
 )
 
 func main() {
-	var (
-		file string
-		send bool
-	)
+	var file string
 
-	// accept params from stdin
+	// accept arg from stdin
 	flag.StringVar(&file, "f", "", "Full path to source file for processing.")
-	flag.BoolVar(&send, "r", true, "Whether or not to send report to file. Default is true i.e print to file.")
 	flag.Parse()
 
-	// display usage if no args are passed
+	// display usage if no arg is passed
 	if len(os.Args[1:]) == 0 {
 		flag.PrintDefaults()
 		return
@@ -40,5 +36,5 @@ func main() {
 	}
 
 	// kickoff the process
-	cmd.Process(file, send)
+	cmd.Process(file)
 }

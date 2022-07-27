@@ -8,9 +8,9 @@ import (
 	"github.com/dele454/medium/csv-transform-to-html/internal/transform"
 )
 
-func Process(file string, send bool) {
+func Process(file string) {
 	// create a reporter
-	reporter := report.NewTransformationReporter(send)
+	reporter := report.NewTransformationReporter()
 
 	// create a new parser
 	parser := parser.NewCSVParser(file, reporter)

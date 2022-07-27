@@ -51,13 +51,8 @@ type TransformationReporter struct {
 }
 
 // NewTransformationReporter create a new instance of a report
-//
-// Accepts a flag on whether to send report to a file or not
-// If false stdout is used as the ouput.
-func NewTransformationReporter(s bool) *TransformationReporter {
-	return &TransformationReporter{
-		SendReportToFile: s,
-	}
+func NewTransformationReporter() *TransformationReporter {
+	return &TransformationReporter{}
 }
 
 // WriteReportToFile writes report to file
