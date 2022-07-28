@@ -48,7 +48,7 @@ type TransformationReporter struct {
 }
 
 // NewTransformationReporter create a new instance of a report
-func NewTransformationReporter() *TransformationReporter {
+func NewTransformationReporter() Reporter {
 	return &TransformationReporter{}
 }
 
