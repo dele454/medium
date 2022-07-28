@@ -19,7 +19,7 @@ import (
 // HTMLTransformer creates a new instance of a transformer
 //
 // Accepts a reporter for reporting purposes.
-func NewHTMLTransformer(reporter report.Reporter) *HTMLTransformer {
+func NewHTMLTransformer(reporter report.Reporter) Transformer {
 	return &HTMLTransformer{
 		reporter: reporter,
 	}

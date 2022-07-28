@@ -29,13 +29,13 @@ func TestProcessRecord(t *testing.T) {
 
 	wg.Wait()
 
-	count := len(transformer.reporter.GetErrors())
+	count := len(reporter.GetErrors())
 	expected := 0
 	if count != expected {
 		t.Fatalf("Expected %d, got %d", expected, count)
 	}
 
-	count = transformer.reporter.GetTotalTransformedRecords()
+	count = reporter.GetTotalTransformedRecords()
 	expected = 100
 	if count != expected {
 		t.Fatalf("Expected %d, got %d", expected, count)
@@ -62,13 +62,13 @@ func TestProcessRecordFails(t *testing.T) {
 
 	wg.Wait()
 
-	count := len(transformer.reporter.GetErrors())
+	count := len(reporter.GetErrors())
 	expected := 0
 	if count == expected {
 		t.Fatalf("Expected %d, got %d", expected, count)
 	}
 
-	count = transformer.reporter.GetTotalTransformedRecords()
+	count = reporter.GetTotalTransformedRecords()
 	expected = 1
 	if count < expected {
 		t.Fatalf("Expected > %d, got %d", expected, count)
