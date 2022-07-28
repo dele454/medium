@@ -1,6 +1,8 @@
 package transform
 
 import (
+	"sync"
+
 	"github.com/dele454/medium/csv-transform-to-html/internal/report"
 )
 
@@ -15,7 +17,8 @@ type Output struct {
 
 // Transformer ops every transformer should conform to
 type Transformer interface {
-	WriteOutputToFile(file Output)
+	WriteOutputToFile(output *Output) error
+	ProcessRecord(wg *sync.WaitGroup, record <-chan []string, done <-chan bool)
 }
 
 // HTMLTransformer handles the processing of customer data
