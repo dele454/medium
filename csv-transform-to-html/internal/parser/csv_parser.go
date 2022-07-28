@@ -16,9 +16,7 @@ import (
 
 // Parser list of operations a parser should be able to perform
 type Parser interface {
-	GetFileInfo() []string
-	Read(wg *sync.WaitGroup)
-	Close() error
+	Read(wg *sync.WaitGroup, record chan<- []string, done chan<- bool)
 }
 
 // CSVParser parser for parsing and reading from csv files
@@ -33,7 +31,7 @@ type CSVFile struct {
 }
 
 // NewCSVParser creates csv parser for parsing & reading credit info from a csv file
-func NewCSVParser(file string, reporter report.Reporter) *CSVParser {
+func NewCSVParser(file string, reporter report.Reporter) Parser {
 	reporter.SetFilename(file)
 
 	return &CSVParser{
