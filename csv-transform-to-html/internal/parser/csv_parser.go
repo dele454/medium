@@ -59,20 +59,19 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 	}
 	defer f.Close()
 
-	// create reader
+	// set the headers
+	c.reporter.SetHeaders(utils.GetHeaders())
+
+	// set the file name
+	c.reporter.SetFilename(filepath.Base(c.reporter.GetFilename()))
+
+	// create csv reader
 	reader := csv.NewReader(f)
 
-	// read the headers
-	headers, err := reader.Read()
-	if err != nil {
+	// parse headers detected in file
+	if err := c.parseHeaders(reader); err != nil {
 		c.reporter.AddError(err)
-		utils.Log(utils.ColorError, errs.ErrorNoHeadersFound)
-		return
 	}
-
-	// set the headers
-	c.reporter.SetHeaders(headers)
-	c.reporter.SetFilename(filepath.Base(c.reporter.GetFilename()))
 
 	// read from file
 	for {
@@ -91,4 +90,34 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 	}
 
 	done <- true
+}
+
+func (c *CSVParser) parseHeaders(reader *csv.Reader) error {
+	// get headers from file
+	headers, err := reader.Read()
+	if err != nil {
+		return err
+	}
+
+	// check for expected nos of headers
+	if len(c.reporter.GetHeaders()) != len(headers) {
+		return errs.ErrorUnmatachedHeaders
+	}
+
+	// check if all expected headers are in source file
+	for _, x := range c.reporter.GetHeaders() {
+		var found bool
+
+		for _, y := range headers {
+			if x == y {
+				found = true
+			}
+		}
+
+		if !found {
+			return fmt.Errorf(errs.ErrorHeaderNotFound.Error(), x)
+		}
+	}
+
+	return nil
 }

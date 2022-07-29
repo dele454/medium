@@ -1,0 +1,186 @@
+package utils
+
+import (
+	"fmt"
+	"html"
+	"math"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/dele454/medium/csv-transform-to-html/internal/errs"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
+// SalesRecord details data about a sale record
+type SalesRecord struct {
+	Region        string `csv:"Region"`
+	Country       string `csv:"Country" processor:"required"`
+	ItemType      string `csv:"ItemType" processor:"required"`
+	SalesChannel  string `csv:"SalesChannel"`
+	OrderPriority string `csv:"OrderPriority"`
+	OrderDate     string `csv:"OrderDate" processor:"date,required"`
+	OrderID       string `csv:"OrderID" processor:"numeric,required"`
+	ShipDate      string `csv:"ShipDate" processor:"date,required"`
+	UnitsSold     string `csv:"UnitsSold" processor:"numeric,required"`
+	UnitPrice     string `csv:"UnitPrice" processor:"amount,required"`
+	UnitCost      string `csv:"UnitCost" processor:"amount,required"`
+	TotalRevenue  string `csv:"TotalRevenue" processor:"amount"`
+	TotalCost     string `csv:"TotalCost" processor:"amount,required"`
+	TotalProfit   string `csv:"TotalProfit" processor:"amount,required"`
+}
+
+// Preprocessor operations a transformer must perform
+type PreProcessor interface {
+	FormatPhone(phone string) string
+	NotEmpty(val, field string) error
+	SanitizeString(str string) string
+	ParseDate(date, field string) (string, error)
+	ParseFloat(val, field string) (float64, error)
+}
+
+// EscapeHTML escapes html tags from a value
+func EscapeHTML(val string) string {
+	return html.EscapeString(val)
+}
+
+// SanitizeString strips out tabs, trailing and leading spaces and quotes from a string
+func SanitizeString(str string) string {
+	return strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(str, "\"", ""), "\t", ""))
+}
+
+// NotEmpty checks if a value is empty
+func NotEmpty(val, field string) error {
+	if val == "" {
+		return fmt.Errorf(errs.ErrorFieldIsEmpty.Error(), field)
+	}
+
+	return nil
+}
+
+// FormatPhone formats a phone number in a standard as outcome
+func FormatPhone(phone string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(phone, " ", "-"), "+", ""), "\t", "")
+}
+
+// ParseDate parses a date string in a DD/MM/YYYY format
+func ParseDate(date, field string) (string, error) {
+	var err error
+
+	if err := NotEmpty(date, field); err != nil {
+		return "", err
+	}
+
+	// parse date field
+	_, err = time.Parse("1/2/2006", date)
+	if err != nil {
+		return "", fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
+	}
+
+	return date, nil
+}
+
+// ParseFloat parse a float value
+func ParseFloat(val, field string) (float64, error) {
+	if err := NotEmpty(val, field); err != nil {
+		return 0, err
+	}
+
+	v, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		return 0, fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
+	}
+
+	if v <= 0 {
+		return 0, fmt.Errorf(errs.ErrorCreditLimitInvalid.Error(), field)
+	}
+
+	return v, nil
+}
+
+func formatNumber(number float64) string {
+	log := math.Floor(math.Log10(number))
+
+	var str string
+	if log >= 2 {
+		str = strconv.FormatFloat(number/100, 'f', -1, 64)
+	} else {
+		str = strconv.FormatFloat(number, 'f', -1, 64)
+	}
+
+	return str
+}
+
+// Unmarshal unmarshals records found into the SalesRecord struct
+//
+// Cycles through all the fields for the SalesRecord struct in order
+// to decipher which field(s) needs a pre-processor and apply
+// as record is unmarshalled.
+func Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
+	var sales SalesRecord
+
+	s := reflect.ValueOf(sales).Type()
+	for i := 0; i < s.NumField(); i++ {
+		field := s.Field(i)
+		tags := strings.Split(field.Tag.Get("processor"), ",")
+
+		switch field.Type.String() {
+		case "string":
+			for _, t := range tags {
+				switch t {
+				case "date":
+					d, err := ParseDate(record[i], field.Name)
+					if err != nil {
+						return sales, err
+					}
+					reflect.ValueOf(&sales).Elem().Field(i).SetString(d)
+				case "numeric":
+					d, err := ParseFloat(record[i], field.Name)
+					if err != nil {
+						return sales, err
+					}
+					reflect.ValueOf(&sr).Elem().Field(i).SetString(strconv.FormatFloat(d, 'f', -1, 64))
+				default:
+					err := NotEmpty(record[i], field.Name)
+					if err != nil {
+						return sales, nil
+					}
+					reflect.ValueOf(&sr).Elem().Field(i).SetString(EscapeHTML(SanitizeString(record[i])))
+				}
+			}
+		}
+	}
+
+	return sr, nil
+}
+
+// UnsupportedType
+type UnsupportedType struct {
+	Type string
+}
+
+// Error error message for UnsupportedType type
+func (e *UnsupportedType) Error() string {
+	return "Unsupported type: " + e.Type
+}
+
+// GetHeaders gets all expected headers for the SalesOrder struct
+//
+// Introspects all csv tags for the SalesOrder struct fields
+// and builds a list of headers from that thus making it dynamic
+func GetHeaders() []string {
+	var (
+		headers []string
+		sr      SalesRecord
+	)
+
+	s := reflect.ValueOf(sr).Type()
+	for i := 0; i < s.NumField(); i++ {
+		headers = append(headers, cases.Title(language.Und, cases.NoLower).
+			String(s.Field(i).Tag.Get("csv")))
+	}
+
+	return headers
+}

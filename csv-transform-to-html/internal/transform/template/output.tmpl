@@ -18,9 +18,20 @@
 
             {{ range $d := .Data}}
                 <tr colspan="{{$total}}">
-                {{ range $data := $d}}
-                   <td>{{$data}}</td>
-                {{ end }}
+                    <td>{{.Region}}</td>
+                    <td>{{.Country}}</td>
+                    <td>{{.ItemType}}</td>
+                    <td>{{.SalesChannel}}</td>
+                    <td>{{.OrderPriority}}</td>
+                    <td>{{.OrderDate}}</td>
+                    <td>{{.OrderID}}</td>
+                    <td>{{.ShipDate}}</td>
+                    <td>{{.UnitsSold}}</td>
+                    <td>{{.UnitPrice}}</td>
+                    <td>{{.UnitCost}}</td>
+                    <td>{{.TotalRevenue}}</td>
+                    <td>{{.TotalCost}}</td>
+                    <td>{{.TotalProfit}}</td>
                 </tr>
             {{else}}
             <tr colspan="{{$total}}">

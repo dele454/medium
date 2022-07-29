@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/dele454/medium/csv-transform-to-html/internal/report"
+	"github.com/dele454/medium/csv-transform-to-html/internal/utils"
 )
 
 // Output details of the transformation sent to an io.Writer
@@ -12,7 +13,7 @@ type Output struct {
 	FileLocation string
 	TotalHeaders int
 	Headers      []string
-	Data         [][]string
+	Data         []utils.SalesRecord
 }
 
 // Transformer ops every transformer should conform to

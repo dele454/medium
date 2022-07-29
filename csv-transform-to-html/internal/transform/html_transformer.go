@@ -29,7 +29,7 @@ func NewHTMLTransformer(reporter report.Reporter) Transformer {
 func (tr *HTMLTransformer) ProcessRecord(wg *sync.WaitGroup, record <-chan []string, done <-chan bool) {
 	var (
 		now  = time.Now()
-		data [][]string
+		data []utils.SalesRecord
 		end  bool
 		ctx  = context.Background()
 	)
@@ -63,9 +63,20 @@ func (tr *HTMLTransformer) ProcessRecord(wg *sync.WaitGroup, record <-chan []str
 				continue
 			}
 
+			// unmarshal records
+			var sr utils.SalesRecord
+			sr, err := utils.Unmarshal(row, sr)
+			if err != nil {
+				tr.reporter.RecordFailed()
+				tr.reporter.AddError(err)
+
+				utils.Log(utils.ColorError, err)
+				continue
+			}
+
 			// push row to collection
 			tr.reporter.RecordTransformed()
-			data = append(data, row)
+			data = append(data, sr)
 		}
 
 		// means parser has signaled end of file

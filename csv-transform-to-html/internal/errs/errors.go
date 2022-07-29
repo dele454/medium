@@ -3,6 +3,8 @@ package errs
 import "errors"
 
 var (
+	ErrorUnmatachedHeaders       = errors.New("Expected headers don't match file's headers.")
+	ErrorHeaderNotFound          = errors.New("Header '%s' not found in source document.")
 	ErrorNoHeadersFound          = errors.New("No headers found in source document.")
 	ErrorUnknownSourceFile       = errors.New("Unknown source file provided.")
 	ErrorNoSourceFileName        = errors.New("No source filename provided for reporting.")
