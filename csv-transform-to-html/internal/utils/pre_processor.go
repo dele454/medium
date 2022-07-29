@@ -129,29 +129,26 @@ func Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
 		field := s.Field(i)
 		tags := strings.Split(field.Tag.Get("processor"), ",")
 
-		switch field.Type.String() {
-		case "string":
-			for _, t := range tags {
-				switch t {
-				case "date":
-					d, err := ParseDate(record[i], field.Name)
-					if err != nil {
-						return sales, err
-					}
-					reflect.ValueOf(&sales).Elem().Field(i).SetString(d)
-				case "numeric":
-					d, err := ParseFloat(record[i], field.Name)
-					if err != nil {
-						return sales, err
-					}
-					reflect.ValueOf(&sr).Elem().Field(i).SetString(strconv.FormatFloat(d, 'f', -1, 64))
-				default:
-					err := NotEmpty(record[i], field.Name)
-					if err != nil {
-						return sales, nil
-					}
-					reflect.ValueOf(&sr).Elem().Field(i).SetString(EscapeHTML(SanitizeString(record[i])))
+		for _, t := range tags {
+			switch t {
+			case "date":
+				d, err := ParseDate(record[i], field.Name)
+				if err != nil {
+					return sales, err
 				}
+				reflect.ValueOf(&sales).Elem().Field(i).SetString(d)
+			case "numeric":
+				d, err := ParseFloat(record[i], field.Name)
+				if err != nil {
+					return sales, err
+				}
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(strconv.FormatFloat(d, 'f', -1, 64))
+			default:
+				err := NotEmpty(record[i], field.Name)
+				if err != nil {
+					return sales, nil
+				}
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(EscapeHTML(SanitizeString(record[i])))
 			}
 		}
 	}
