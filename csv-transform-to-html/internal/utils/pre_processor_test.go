@@ -22,17 +22,17 @@ func TestParseDate(t *testing.T) {
 }
 
 func TestParseFloat(t *testing.T) {
-	_, err := ParseFloat("ParseBirthday", "Credit Limit")
+	err := ParseFloat("ParseBirthday", "Credit Limit")
 	if err == nil {
 		t.Fatal("Credit limit should not be valid")
 	}
 
-	_, err = ParseFloat("121.99", "Credit Limit")
+	err = ParseFloat("121.99", "Credit Limit")
 	if err != nil {
 		t.Fatal("Credit limit should be valid")
 	}
 
-	_, err = ParseFloat("1000000", "Credit Limit")
+	err = ParseFloat("1000000", "Credit Limit")
 	if err != nil {
 		t.Fatal("Credit limit should be valid")
 	}

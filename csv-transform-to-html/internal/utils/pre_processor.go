@@ -86,21 +86,31 @@ func ParseDate(date, field string) (string, error) {
 }
 
 // ParseFloat parse a float value
-func ParseFloat(val, field string) (float64, error) {
+func ParseFloat(val, field string) error {
 	if err := NotEmpty(val, field); err != nil {
-		return 0, err
+		return err
 	}
 
-	v, err := strconv.ParseFloat(val, 64)
+	_, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		return 0, fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
+		return fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
 	}
 
-	if v <= 0 {
-		return 0, fmt.Errorf(errs.ErrorCreditLimitInvalid.Error(), field)
+	return nil
+}
+
+// ParseInteger parse a int value
+func ParseInteger(val, field string) error {
+	if err := NotEmpty(val, field); err != nil {
+		return err
 	}
 
-	return v, nil
+	_, err := strconv.ParseInt(val, 0, 36)
+	if err != nil {
+		return fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
+	}
+
+	return nil
 }
 
 func formatNumber(number float64) string {
@@ -137,12 +147,18 @@ func Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
 					return sales, err
 				}
 				reflect.ValueOf(&sales).Elem().Field(i).SetString(d)
-			case "numeric":
-				d, err := ParseFloat(record[i], field.Name)
+			case "amount":
+				err := ParseFloat(record[i], field.Name)
 				if err != nil {
 					return sales, err
 				}
-				reflect.ValueOf(&sr).Elem().Field(i).SetString(strconv.FormatFloat(d, 'f', -1, 64))
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
+			case "numeric":
+				err := ParseInteger(record[i], field.Name)
+				if err != nil {
+					return sales, err
+				}
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
 			default:
 				err := NotEmpty(record[i], field.Name)
 				if err != nil {
