@@ -27,7 +27,7 @@ func Process(file string) {
 	go transform.NewHTMLTransformer(reporter).
 		ProcessRecord(wg, record, done)
 
-	// source parser
+	// read the csv
 	go parser.Read(wg, record, done)
 
 	// wait for all go routines to finish

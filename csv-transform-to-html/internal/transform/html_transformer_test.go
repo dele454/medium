@@ -10,7 +10,7 @@ import (
 )
 
 func TestProcessRecord(t *testing.T) {
-	reporter := report.NewMockReporter(false)
+	reporter := report.NewMockReporter()
 	transformer := NewHTMLTransformer(reporter)
 
 	path := utils.RootDir()
@@ -43,7 +43,7 @@ func TestProcessRecord(t *testing.T) {
 }
 
 func TestProcessRecordFails(t *testing.T) {
-	reporter := report.NewMockReporter(false)
+	reporter := report.NewMockReporter()
 	transformer := NewHTMLTransformer(reporter)
 
 	path := utils.RootDir()

@@ -30,7 +30,7 @@ type CSVFile struct {
 	Headers []string
 }
 
-// NewCSVParser creates csv parser for parsing & reading credit info from a csv file
+// NewCSVParser creates csv parser for parsing & reading sales data
 func NewCSVParser(file string, reporter report.Reporter) Parser {
 	reporter.SetFilename(file)
 
@@ -39,7 +39,7 @@ func NewCSVParser(file string, reporter report.Reporter) Parser {
 	}
 }
 
-// Read reads from the source file
+// Read reads from the csv file
 func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<- bool) {
 	start := time.Now()
 
@@ -51,6 +51,7 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 		wg.Done()
 	}()
 
+	// open file for reading
 	f, err := os.Open(c.reporter.GetFilename())
 	if err != nil {
 		c.reporter.AddError(err)

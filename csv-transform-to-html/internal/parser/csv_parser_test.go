@@ -9,7 +9,7 @@ import (
 )
 
 func TestCSVRead(t *testing.T) {
-	reporter := report.NewMockReporter(false)
+	reporter := report.NewMockReporter()
 
 	path := utils.RootDir()
 	p := NewCSVParser(path+"/internal/testdata/100_sales_records.csv", reporter)
