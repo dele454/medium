@@ -53,13 +53,13 @@ func TestUnmarshal(t *testing.T) {
 
 	expectations := []sample{
 		{
-			[]string{"Australia and Oceania,Tuvalu,Baby Food,Offline,H,5/28/2010,669165933,6/27/2010,9925,255.28,159.42,2533654.00,1582243.50,951410.50"},
+			[]string{"Australia and Oceania", "Tuvalu", "Baby Food", "Offline", "H", "5/28/2010", "669165933", "6/27/2010", "9925", "255.28", "159.42", "2533654.00", "1582243.50", "951410.50"},
 			false,
 		},
-		// {
-		// 	[]string{"Central America and the Caribbean,Grenada,Cereal,Online,C,8/22/2012,963881480,9/15/2012,2804,205.70,117.11,576782.80,328376.44,248406.36"},
-		// 	true,
-		// },
+		{
+			[]string{"Central America and the Caribbean", "Grenada", "Cereal", "Online", "C", "8/22/2012", "963881480", "9/15/2012", "2804", "205.70", "117.11", "576782.80", "328376.44", "SAY WHAT"},
+			true,
+		},
 	}
 
 	for _, tc := range expectations {

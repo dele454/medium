@@ -149,11 +149,13 @@ func (p *Processor) Unmarshal(record []string, sr SalesRecord) (SalesRecord, err
 					return sr, err
 				}
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
-			default:
+			case "required":
 				err := p.NotEmpty(record[i], field.Name)
 				if err != nil {
 					return sr, nil
 				}
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
+			default:
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
 			}
 		}
