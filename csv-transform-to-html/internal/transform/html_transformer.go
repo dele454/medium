@@ -35,7 +35,8 @@ type Transformer interface {
 // with the aid of preprocessors and writing the output
 // as an HTML document.
 type HTMLTransformer struct {
-	reporter report.Reporter
+	processor utils.PreProcessor
+	reporter  report.Reporter
 }
 
 // XMLTransformer handles the processing of customer data
@@ -48,7 +49,8 @@ type XMLTransformer struct{}
 // Accepts a reporter for reporting purposes.
 func NewHTMLTransformer(reporter report.Reporter) Transformer {
 	return &HTMLTransformer{
-		reporter: reporter,
+		processor: utils.NewProcessor(),
+		reporter:  reporter,
 	}
 }
 
@@ -92,12 +94,11 @@ func (tr *HTMLTransformer) ProcessRecord(wg *sync.WaitGroup, record <-chan []str
 
 			// unmarshal records
 			var sr utils.SalesRecord
-			sr, err := utils.Unmarshal(row, sr)
+			sr, err := tr.processor.Unmarshal(row, sr)
 			if err != nil {
 				tr.reporter.RecordFailed()
 				tr.reporter.AddError(err)
 
-				utils.Log(utils.ColorError, err)
 				continue
 			}
 

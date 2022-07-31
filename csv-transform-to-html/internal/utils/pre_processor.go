@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"html"
-	"math"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -37,25 +36,36 @@ type SalesRecord struct {
 
 // Preprocessor operations a transformer must perform
 type PreProcessor interface {
-	FormatPhone(phone string) string
+	EscapeHTML(val string) string
 	NotEmpty(val, field string) error
 	SanitizeString(str string) string
-	ParseDate(date, field string) (string, error)
-	ParseFloat(val, field string) (float64, error)
+	ParseDate(val, field string) error
+	ParseFloat(val, field string) error
+	ParseInteger(val, field string) error
+
+	Unmarshal(record []string, sr SalesRecord) (SalesRecord, error)
+}
+
+// Processor
+type Processor struct{}
+
+// NewProcessor creates a new processor
+func NewProcessor() PreProcessor {
+	return &Processor{}
 }
 
 // EscapeHTML escapes html tags from a value
-func EscapeHTML(val string) string {
+func (p *Processor) EscapeHTML(val string) string {
 	return html.EscapeString(val)
 }
 
 // SanitizeString strips out tabs, trailing and leading spaces and quotes from a string
-func SanitizeString(str string) string {
+func (p *Processor) SanitizeString(str string) string {
 	return strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(str, "\"", ""), "\t", ""))
 }
 
 // NotEmpty checks if a value is empty
-func NotEmpty(val, field string) error {
+func (p *Processor) NotEmpty(val, field string) error {
 	if val == "" {
 		return fmt.Errorf(errs.ErrorFieldIsEmpty.Error(), field)
 	}
@@ -63,31 +73,26 @@ func NotEmpty(val, field string) error {
 	return nil
 }
 
-// FormatPhone formats a phone number in a standard as outcome
-func FormatPhone(phone string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(phone, " ", "-"), "+", ""), "\t", "")
-}
-
 // ParseDate parses a date string in a DD/MM/YYYY format
-func ParseDate(date, field string) (string, error) {
+func (p *Processor) ParseDate(val, field string) error {
 	var err error
 
-	if err := NotEmpty(date, field); err != nil {
-		return "", err
+	if err := p.NotEmpty(val, field); err != nil {
+		return err
 	}
 
 	// parse date field
-	_, err = time.Parse("1/2/2006", date)
+	_, err = time.Parse("1/2/2006", val)
 	if err != nil {
-		return "", fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
+		return fmt.Errorf(errs.ErrorFieldNotValid.Error(), field)
 	}
 
-	return date, nil
+	return nil
 }
 
 // ParseFloat parse a float value
-func ParseFloat(val, field string) error {
-	if err := NotEmpty(val, field); err != nil {
+func (p *Processor) ParseFloat(val, field string) error {
+	if err := p.NotEmpty(val, field); err != nil {
 		return err
 	}
 
@@ -100,8 +105,8 @@ func ParseFloat(val, field string) error {
 }
 
 // ParseInteger parse a int value
-func ParseInteger(val, field string) error {
-	if err := NotEmpty(val, field); err != nil {
+func (p *Processor) ParseInteger(val, field string) error {
+	if err := p.NotEmpty(val, field); err != nil {
 		return err
 	}
 
@@ -113,28 +118,13 @@ func ParseInteger(val, field string) error {
 	return nil
 }
 
-func formatNumber(number float64) string {
-	log := math.Floor(math.Log10(number))
-
-	var str string
-	if log >= 2 {
-		str = strconv.FormatFloat(number/100, 'f', -1, 64)
-	} else {
-		str = strconv.FormatFloat(number, 'f', -1, 64)
-	}
-
-	return str
-}
-
 // Unmarshal unmarshals records found into the SalesRecord struct
 //
 // Cycles through all the fields for the SalesRecord struct in order
 // to decipher which field(s) needs a pre-processor and apply
 // as record is unmarshalled.
-func Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
-	var sales SalesRecord
-
-	s := reflect.ValueOf(sales).Type()
+func (p *Processor) Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
+	s := reflect.ValueOf(sr).Type()
 	for i := 0; i < s.NumField(); i++ {
 		field := s.Field(i)
 		tags := strings.Split(field.Tag.Get("processor"), ",")
@@ -142,29 +132,29 @@ func Unmarshal(record []string, sr SalesRecord) (SalesRecord, error) {
 		for _, t := range tags {
 			switch t {
 			case "date":
-				d, err := ParseDate(record[i], field.Name)
+				err := p.ParseDate(record[i], field.Name)
 				if err != nil {
-					return sales, err
+					return sr, err
 				}
-				reflect.ValueOf(&sales).Elem().Field(i).SetString(d)
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
 			case "amount":
-				err := ParseFloat(record[i], field.Name)
+				err := p.ParseFloat(record[i], field.Name)
 				if err != nil {
-					return sales, err
+					return sr, err
 				}
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
 			case "numeric":
-				err := ParseInteger(record[i], field.Name)
+				err := p.ParseInteger(record[i], field.Name)
 				if err != nil {
-					return sales, err
+					return sr, err
 				}
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
 			default:
-				err := NotEmpty(record[i], field.Name)
+				err := p.NotEmpty(record[i], field.Name)
 				if err != nil {
-					return sales, nil
+					return sr, nil
 				}
-				reflect.ValueOf(&sr).Elem().Field(i).SetString(EscapeHTML(SanitizeString(record[i])))
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
 			}
 		}
 	}
