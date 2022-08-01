@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title></title>
+    <title>{{.FileName}}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
 </head>
 <body class="">
@@ -34,7 +34,7 @@
                     <td>{{.TotalProfit}}</td>
                 </tr>
             {{else}}
-            <tr colspan="{{$total}}">
+            <tr>
                 <td colspan="{{$total}}" align="center">No data was exported.</td>
             </tr>
             {{end}}
