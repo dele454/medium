@@ -131,6 +131,12 @@ func (p *Processor) Unmarshal(record []string, sr SalesRecord) (SalesRecord, err
 
 		for _, t := range tags {
 			switch t {
+			case "required":
+				err := p.NotEmpty(record[i], field.Name)
+				if err != nil {
+					return sr, err
+				}
+				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
 			case "date":
 				err := p.ParseDate(record[i], field.Name)
 				if err != nil {
@@ -149,12 +155,6 @@ func (p *Processor) Unmarshal(record []string, sr SalesRecord) (SalesRecord, err
 					return sr, err
 				}
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(record[i])
-			case "required":
-				err := p.NotEmpty(record[i], field.Name)
-				if err != nil {
-					return sr, err
-				}
-				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
 			default:
 				reflect.ValueOf(&sr).Elem().Field(i).SetString(p.EscapeHTML(p.SanitizeString(record[i])))
 			}
