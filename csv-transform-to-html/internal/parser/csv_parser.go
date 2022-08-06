@@ -54,9 +54,7 @@ func (c *CSVParser) Read(wg *sync.WaitGroup, record chan<- []string, done chan<-
 	// open file for reading
 	f, err := os.Open(c.reporter.GetFilename())
 	if err != nil {
-		c.reporter.AddError(err)
-		utils.Log(utils.ColorError, fmt.Sprintf("Error opening csv file: %s", err))
-		return
+		panic(err)
 	}
 	defer f.Close()
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/dele454/medium/csv-transform-to-html/cmd"
 	"github.com/dele454/medium/csv-transform-to-html/internal/errs"
-	"github.com/dele454/medium/csv-transform-to-html/internal/utils"
 )
 
 func main() {
@@ -25,14 +24,12 @@ func main() {
 	// get file's info
 	f, err := os.Stat(file)
 	if err != nil {
-		utils.Log(utils.ColorError, err)
-		return
+		panic(err)
 	}
 
 	// check its a file
 	if f.IsDir() {
-		utils.Log(utils.ColorError, errs.ErrorArgsDirSpecified)
-		return
+		panic(errs.ErrorArgsDirSpecified)
 	}
 
 	// kickoff the process
