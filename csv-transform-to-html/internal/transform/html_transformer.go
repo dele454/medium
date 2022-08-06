@@ -152,15 +152,16 @@ func (tr *HTMLTransformer) WriteOutputToFile(output *Output) error {
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
 		err := os.Mkdir(folder, os.ModePerm)
 		if err != nil {
-			return fmt.Errorf(errs.ErrorFailedToCreateDirectory.Error(), err)
+			panic(errs.ErrorFailedToCreateDirectory)
 		}
 	}
 
 	// create output html file
 	f, err := os.Create(fmt.Sprintf("%s/%s.html", folder, output.FileName))
 	if err != nil {
-		return err
+		panic(err)
 	}
+	defer f.Close()
 
 	// write output to html file
 	w := bufio.NewWriter(f)
