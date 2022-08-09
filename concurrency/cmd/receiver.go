@@ -14,6 +14,23 @@ var pool = sync.Pool{
 	},
 }
 
+// IMDbReceiver handles the processing of movie titles
+type IMDbReceiver struct{}
+
+// LevelTwoReceiverParams for LevelTwoReceiver func
+// As a way of compacting the params for LevelTwoReceiver
+type LevelTwoReceiverParams struct {
+	Wg     *sync.WaitGroup // waitgroup
+	Record <-chan []string // record read from file
+	Done   chan bool       // signal reading has completed or match found (if filter is applied)
+	Filter string          // single filter to apply to record
+}
+
+// NewReceiver gets a new receiver
+func NewReceiver() *IMDbReceiver {
+	return new(IMDbReceiver)
+}
+
 // LevelTwoReceiver level two receiver
 func (r *IMDbReceiver) Receive(ctx context.Context, id int, params *LevelTwoReceiverParams) {
 	var counter int
@@ -27,9 +44,9 @@ func (r *IMDbReceiver) Receive(ctx context.Context, id int, params *LevelTwoRece
 		select {
 		case <-ctx.Done():
 			return
-		case r := <-params.Record:
+		case rec := <-params.Record:
 			// if empty ignore
-			if len(r) == 0 {
+			if len(rec) == 0 {
 				continue
 			}
 
@@ -37,7 +54,7 @@ func (r *IMDbReceiver) Receive(ctx context.Context, id int, params *LevelTwoRece
 
 			// unmarshal record
 			movie := NewMovie()
-			movie, err := Unmarshal(r, movie)
+			movie, err := r.Unmarshal(rec, movie)
 			movie.ReturnMovieToPool()
 			if err != nil {
 				continue
@@ -60,23 +77,6 @@ func (r *IMDbReceiver) Receive(ctx context.Context, id int, params *LevelTwoRece
 			return
 		}
 	}
-}
-
-// IMDbReceiver handles the processing of movie titles
-type IMDbReceiver struct{}
-
-// LevelTwoReceiverParams for LevelTwoReceiver func
-// As a way of compacting the params for LevelTwoReceiver
-type LevelTwoReceiverParams struct {
-	Wg     *sync.WaitGroup // waitgroup
-	Record <-chan []string // record read from file
-	Done   chan bool       // signal reading has completed or match found (if filter is applied)
-	Filter string          // single filter to apply to record
-}
-
-// NewReceiver gets a new receiver
-func NewReceiver() *IMDbReceiver {
-	return new(IMDbReceiver)
 }
 
 // Movie basic details of a movie
@@ -103,7 +103,7 @@ func (m *Movie) ReturnMovieToPool() {
 }
 
 // Unmarshal unmarshals records found into the Movie struct
-func Unmarshal(record []string, movie Movie) (Movie, error) {
+func (r *IMDbReceiver) Unmarshal(record []string, movie Movie) (Movie, error) {
 	s := reflect.ValueOf(movie).Type()
 	for i := 0; i < s.NumField(); i++ {
 		reflect.ValueOf(&movie).Elem().Field(i).SetString(record[i])
