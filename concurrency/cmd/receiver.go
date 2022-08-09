@@ -54,11 +54,8 @@ func (r *IMDbReceiver) Receive(ctx context.Context, id int, params *LevelTwoRece
 
 			// unmarshal record
 			movie := NewMovie()
-			movie, err := r.Unmarshal(rec, movie)
 			movie.ReturnMovieToPool()
-			if err != nil {
-				continue
-			}
+			movie = r.Unmarshal(rec, movie)
 
 			// if filter applied doesn't match, move on
 			if params.Filter != "" && movie.PrimaryTitle != params.Filter {
@@ -103,11 +100,11 @@ func (m *Movie) ReturnMovieToPool() {
 }
 
 // Unmarshal unmarshals records found into the Movie struct
-func (r *IMDbReceiver) Unmarshal(record []string, movie Movie) (Movie, error) {
+func (r *IMDbReceiver) Unmarshal(record []string, movie Movie) Movie {
 	s := reflect.ValueOf(movie).Type()
 	for i := 0; i < s.NumField(); i++ {
 		reflect.ValueOf(&movie).Elem().Field(i).SetString(record[i])
 	}
 
-	return movie, nil
+	return movie
 }

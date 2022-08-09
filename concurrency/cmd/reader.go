@@ -57,6 +57,8 @@ func (r *Reader) Read(ctx context.Context, wg *sync.WaitGroup, filters Args) {
 		r.duration += float64(time.Since(start).Seconds())
 		wg.Done()
 		cancel()
+
+		time.Sleep(3 * time.Millisecond)
 	}()
 
 	// open file for reading
